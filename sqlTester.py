@@ -10,12 +10,15 @@ DRIVER = 'Driver={ODBC Driver 17 for SQL Server};Server=tcp:aeul-test-server.dat
 WORKSPACE = ""#'/Users/Aaron/Desktop/Scripts'
 workFolder = "/Users/Aaron/Desktop/Scripts/####_##_##"
 
-dataTable = "Race_Data_35"
-
 PROCESSES = 5
 
 Scripts = []
 
+def writeError(message):
+        errorLogLocation = workFolder + "/" + ("errorlog.txt")
+        errLog = open(errorLogLocation, 'a')
+        errLog.write(message + os.linesep)
+        errLog.close()
 
 def scriptFinder():
     exclude = ()
@@ -98,15 +101,10 @@ def worker(num):
             errLog.write("Command failed: " + command + os.linesep)
             errLog.write("Sql Error Msg: " + str(err) + os.linesep)
 
-            # log.close()
-            errLog.close()
             return Scripts[num][0], 0.00, "Failed"
 
 
     # log.write('\nExiting ' + Scripts[num][0])
-
-    # log.close()
-    errLog.close()
 
     endTime = time.time()
 
