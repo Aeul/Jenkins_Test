@@ -7,35 +7,41 @@ import sys
 import shutil
 
 DRIVER = 'Driver={ODBC Driver 17 for SQL Server};Server=tcp:aeul-test-server.database.windows.net,1433;Database=Aaron_Test_Server;Uid=aeul@aeul-test-server;Pwd={/Raindrop18};Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;'
-WORKSPACE = ""#'/Users/Aaron/Desktop/Scripts'
+WORKSPACE = "" #'/Users/Aaron/Desktop/Scripts'
 workFolder = "/Users/Aaron/Desktop/Scripts/####_##_##"
 
 PROCESSES = 5
 
 Scripts = []
 
-def writeError(message):
+def logErr(message):
+        curTime = datetime.datetime.now().strftime('%H:%M:%S')
         errorLogLocation = workFolder + "/" + ("errorlog.txt")
         errLog = open(errorLogLocation, 'a')
-        errLog.write(message + os.linesep)
+        errLog.write("[" + curTime + "]" + message + os.linesep)
         errLog.close()
 
-def scriptFinder():
+def log(message):
+        LogLocation = workFolder + "/" + ("log.txt")
+        errLog = open(LogLocation, 'a')
+        errLog.write("[" + curTime + "]" + message + os.linesep)
+        errLog.close()
+
+def findScripts():
+    numScripts = 0
     exclude = ()
     for root, dirs, files in os.walk(WORKSPACE):
-
         # If there is a no Script Folder
         # - Created new folder (Scripts)
-        scrFd = WORKSPACE + "/scripts"
+        scriptsFd = WORKSPACE + "/scripts"
         if not os.path.exists(scrFd):
-            os.mkdir(scrFd)
+            os.mkdir(scriptsFd)
         else:
-            shutil.rmtree(scrFd)
-            os.mkdir(scrFd)
+            shutil.rmtree(scriptsFd) #If it does, delete current and remake
+            os.mkdir(scriptsFd)
 
         for name in files:
             subject = root + "/" + name
-
             #Filter out:
             # - Hidden Files
             # - Without_extension Files
@@ -49,39 +55,34 @@ def scriptFinder():
             # Filter out:
             # -None .Sql Files
             if extension == ".sql":
-
-                # Copy all found .Sql fills into Script folder
-                newfile = scrFd + "/" + name
+                # Copy found .Sql file into Script folder
+                newfile = scriptsFd + "/" + name
                 shutil.copy(subject, newfile)
-                print(name, subject)
+                print("Moved ==> " + name)
 
+                numScripts += 1
+
+                # Append found script name and path to Scripts Array
                 global Scripts
-                Scripts.append((name, subject))
+                Scripts.append((name, newfile))
+
+            return numScripts
 
 
-def worker(num):
+def node(num):
     startTime = time.time()
-
-    # workerFolderPath = createWorker(Scripts[num][0])
-    #
-    # logLocation = workerFolderPath + "/" + ("log.txt")
-    errorLogLocation = workFolder + "/" + ("errorlog.txt")
-
-    # log = open(logLocation, 'a')
-    errLog = open(errorLogLocation, 'a')
-
-    """worker function"""
-    # log.write('Starting ' + Scripts[num][0])
-
+    log("Node " + num + ": is starting...")
     # time.sleep(randint(1,4))
 
     con = pyodbc.connect(DRIVER)
+    log("Node " + num + ": connected to Sql Server")
     cur = con.cursor()
 
     # Open and read the file as a single buffer
     fd = open(Scripts[num][1], 'r')
     sqlFile = fd.read()
     fd.close()
+    log("Node " + num + ": read Sql Script :" + Scripts[num][0])
 
     # all SQL commands (split on ';')
     sqlCommands = sqlFile.split(';')
@@ -89,30 +90,25 @@ def worker(num):
     # Execute every command from the input file
     line = 1
     for command in sqlCommands:
-        # This will skip and report errors
-        # For example, if the tables do not yet exist, this will skip over
-        # the DROP TABLE commands
         try:
-            cur.execute(command)
-
+            log("Node " + num + ": executing :" + command)
+            cur.execute(command) #Run Sql Command
         except (pyodbc.ProgrammingError) as err:
             pass
-            # os.rename(workerFolderPath, workerFolderPath + "[Failed]")
-            errLog.write("Command failed: " + command + os.linesep)
-            errLog.write("Sql Error Msg: " + str(err) + os.linesep)
+            log("Node : " + num + ": Command = " + command + "failed")
+            log("Node : " + num + "Sql Error Msg: " + str(err))
 
+            errlog("Node : " + num + ": Command = " + command + "failed")
+            errlog("Node : " + num + "Sql Error Msg: " + str(err))
             return Scripts[num][0], 0.00, "Failed"
 
-
-    # log.write('\nExiting ' + Scripts[num][0])
-
     endTime = time.time()
-
+    log("Node " + num + "completed ")
     return Scripts[num][0], (endTime - startTime), "Successful"
 
-
+#Builds folder which will contain logs
 def createWorkspaceFolder():
-    time = datetime.datetime.now().strftime('%Y_%m_%d__%H_%M_%S')
+    time = datetime.datetime.now().strftime('%Y_%M_%D__%H_%M_%S')
     new_dir = WORKSPACE + "/" + time
     os.mkdir(new_dir)
 
@@ -120,33 +116,32 @@ def createWorkspaceFolder():
     workFolder = new_dir
     print("Work Location : ", workFolder)
 
-def createWorker(fileName):
-    new_dir = workFolder + "/" + fileName
-    os.mkdir(new_dir)
+# def createNode(fileName):
+#     new_dir = workFolder + "/" + fileName
+#     os.mkdir(new_dir)
+#
+#     return new_dir
 
-    return new_dir
-
-def createMasterLog(pool_outputs):
+def createReport(pool_outputs):
     fileLoc = workFolder + "/" + ("MasterLog.txt")
     log = open(fileLoc, 'a')
     for output in pool_outputs:
-        log.write("=========================================" + os.linesep)
+        log.write("=========================================" + os.linesep + os.linesep)
 
         log.write("Script: " + output[0] + " was [" + output[2] + "]" + os.linesep)
-        log.write("   Time taken: " + str(output[1]) + os.linesep)
+        log.write("   Time taken: " + str(output[1]) + os.linesep + os.linesep)
 
         log.write("=========================================" + os.linesep)
 
 if __name__ == '__main__':
     WORKSPACE = str(sys.argv[1])
-    # b = str(sys.argv[2])
 
-    scriptFinder()
+    numScripts = findScripts()
     createWorkspaceFolder()
 
     pool = multiprocessing.Pool(processes=PROCESSES)
-    pool_outputs = pool.map(worker, range(5))
+    pool_outputs = pool.map(node, range(numScripts))
     pool.close()
     pool.join()
 
-    createMasterLog(pool_outputs)
+    createReport(pool_outputs)
