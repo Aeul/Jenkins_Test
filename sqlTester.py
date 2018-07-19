@@ -6,7 +6,7 @@ import os
 import sys
 import shutil
 
-DRIVER = 'Driver={ODBC Driver 17 for SQL Server};Server=tcp:aeul-test-server.database.windows.net,1433;Database=Aaron_Test_Server;Uid=aeul@aeul-test-server;Pwd={/Raindrop18};Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;'
+DRIVER = 'Driver={ODBC Driver 13 for SQL Server};Server=tcp:aeul-test-server.database.windows.net,1433;Database=Aaron_Test_Server;Uid=aeul@aeul-test-server;Pwd={/Raindrop18};Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;'
 WORKSPACE = "" #'/Users/Aaron/Desktop/Scripts'
 workFolder = "/Users/Aaron/Desktop/Scripts/####_##_##"
 
@@ -115,12 +115,6 @@ def createWorkspaceFolder():
     global workFolder
     workFolder = new_dir
     print("Work Location : ", workFolder)
-
-# def createNode(fileName):
-#     new_dir = workFolder + "/" + fileName
-#     os.mkdir(new_dir)
-#
-#     return new_dir
 
 def createReport(pool_outputs):
     fileLoc = workFolder + "/" + ("MasterLog.txt")
