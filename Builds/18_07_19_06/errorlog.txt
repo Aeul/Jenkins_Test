@@ -1,0 +1,2 @@
+[20:02:07]Node 3: Command = SELECT TOP 100 * FROM dbo.Race_Data_3\5failed
+[20:02:07]Node 3: Sql Error Msg: ('42000', "[42000] [Microsoft][ODBC Driver 13 for SQL Server][SQL Server]Incorrect syntax near '\\5'. (102) (SQLExecDirectW)")

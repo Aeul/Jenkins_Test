@@ -6,33 +6,45 @@ import os
 import sys
 import shutil
 
-DRIVER = 'Driver={ODBC Driver 17 for SQL Server};Server=tcp:aeul-test-server.database.windows.net,1433;Database=Aaron_Test_Server;Uid=aeul@aeul-test-server;Pwd={/Raindrop18};Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;'
-WORKSPACE = ""#'/Users/Aaron/Desktop/Scripts'
-workFolder = "/Users/Aaron/Desktop/Scripts/####_##_##"
-
-dataTable = "Race_Data_35"
+DRIVER = 'Driver={ODBC Driver 13 for SQL Server};Server=tcp:aeul-test-server.database.windows.net,1433;Database=Aaron_Test_Server;Uid=aeul@aeul-test-server;Pwd={/Raindrop18};Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;'
 
 PROCESSES = 5
 
 Scripts = []
 
+def logErr(message):
+        curTime = datetime.datetime.now().strftime('%H:%M:%S')
+        errorLogLocation = build_folder + "/" + ("errorlog.txt")
+        print(message)
+        errLog = open(errorLogLocation, 'a')
+        errLog.write("[" + curTime + "]" + message + os.linesep)
+        errLog.close()
 
-def scriptFinder():
+def log(message):
+        curTime = datetime.datetime.now().strftime('%H:%M:%S')
+        LogLocation = build_folder + "/" + ("log.txt")
+        print(message)
+        errLog = open(LogLocation, 'a')
+        errLog.write("[" + curTime + "]" + message + os.linesep)
+        errLog.close()
+
+def findScripts():
+    print(WORKSPACE)
+    numScripts = 0
     exclude = ()
-    for root, dirs, files in os.walk(WORKSPACE):
-
+    for root, dirs, files in os.walk(SCRIPTS):
         # If there is a no Script Folder
         # - Created new folder (Scripts)
-        scrFd = WORKSPACE + "/scripts"
-        if not os.path.exists(scrFd):
-            os.mkdir(scrFd)
+        scriptsFd = WORKSPACE + "scripts"
+        if not os.path.exists(scriptsFd):
+            os.mkdir(scriptsFd)
         else:
-            shutil.rmtree(scrFd)
-            os.mkdir(scrFd)
+            shutil.rmtree(scriptsFd) #If it does, delete current and remake
+            os.mkdir(scriptsFd)
 
         for name in files:
+            print("Found: " + name)
             subject = root + "/" + name
-
             #Filter out:
             # - Hidden Files
             # - Without_extension Files
@@ -46,39 +58,34 @@ def scriptFinder():
             # Filter out:
             # -None .Sql Files
             if extension == ".sql":
-
-                # Copy all found .Sql fills into Script folder
-                newfile = scrFd + "/" + name
+                # Copy found .Sql file into Script folder
+                newfile = scriptsFd + "/" + name
                 shutil.copy(subject, newfile)
-                print(name, subject)
+                print("Copied ==> " + name + "Path = " + scriptsFd)
 
+                numScripts += 1
+
+                # Append found script name and path to Scripts Array
                 global Scripts
-                Scripts.append((name, subject))
+                Scripts.append((name, newfile))
+
+        return numScripts
 
 
-def worker(num):
+def node(num):
     startTime = time.time()
-
-    # workerFolderPath = createWorker(Scripts[num][0])
-    #
-    # logLocation = workerFolderPath + "/" + ("log.txt")
-    errorLogLocation = workFolder + "/" + ("errorlog.txt")
-
-    # log = open(logLocation, 'a')
-    errLog = open(errorLogLocation, 'a')
-
-    """worker function"""
-    # log.write('Starting ' + Scripts[num][0])
-
+    log("Node " + str(num) + ": is starting...")
     # time.sleep(randint(1,4))
 
     con = pyodbc.connect(DRIVER)
+    log("Node " + str(num) + ": connected to Sql Server")
     cur = con.cursor()
 
     # Open and read the file as a single buffer
     fd = open(Scripts[num][1], 'r')
     sqlFile = fd.read()
     fd.close()
+    log("Node " + str(num) + ": read Sql Script :" + Scripts[num][0])
 
     # all SQL commands (split on ';')
     sqlCommands = sqlFile.split(';')
@@ -86,69 +93,70 @@ def worker(num):
     # Execute every command from the input file
     line = 1
     for command in sqlCommands:
-        # This will skip and report errors
-        # For example, if the tables do not yet exist, this will skip over
-        # the DROP TABLE commands
         try:
-            cur.execute(command)
-
+            log("Node " + str(num) + ": executing :" + command)
+            cur.execute(command) #Run Sql Command
         except (pyodbc.ProgrammingError) as err:
             pass
-            # os.rename(workerFolderPath, workerFolderPath + "[Failed]")
-            errLog.write("Command failed: " + command + os.linesep)
-            errLog.write("Sql Error Msg: " + str(err) + os.linesep)
+            log("Node " + str(num) + ": Command = " + command + "failed")
+            log("Node " + str(num) + ": Sql Error Msg: " + str(err))
 
-            # log.close()
-            errLog.close()
+            logErr("Node " + str(num) + ": Command = " + command + "failed")
+            logErr("Node " + str(num) + ": Sql Error Msg: " + str(err))
             return Scripts[num][0], 0.00, "Failed"
 
-
-    # log.write('\nExiting ' + Scripts[num][0])
-
-    # log.close()
-    errLog.close()
-
     endTime = time.time()
-
+    log("Node " + str(num) + " completed ")
     return Scripts[num][0], (endTime - startTime), "Successful"
 
-
+#Builds folder which will contain logs
 def createWorkspaceFolder():
-    time = datetime.datetime.now().strftime('%Y_%m_%d__%H_%M_%S')
-    new_dir = WORKSPACE + "/" + time
+    builds_folder = WORKSPACE + "/Builds"
+    if not os.path.exists(builds_folder):
+        os.mkdir(builds_folder)
+
+
+    time = datetime.datetime.now().strftime('%y_%m_%d_%S')
+    new_dir = builds_folder + "/" + time
     os.mkdir(new_dir)
 
-    global workFolder
-    workFolder = new_dir
-    print("Work Location : ", workFolder)
+    global build_folder
+    build_folder = new_dir
+    print("Work Location : ", build_folder)
 
-def createWorker(fileName):
-    new_dir = workFolder + "/" + fileName
-    os.mkdir(new_dir)
-
-    return new_dir
-
-def createMasterLog(pool_outputs):
-    fileLoc = workFolder + "/" + ("MasterLog.txt")
+def createReport(pool_outputs):
+    fileLoc = build_folder + "/" + ("MasterLog.txt")
     log = open(fileLoc, 'a')
     for output in pool_outputs:
-        log.write("=========================================" + os.linesep)
+        log.write("=========================================" + os.linesep + os.linesep)
 
         log.write("Script: " + output[0] + " was [" + output[2] + "]" + os.linesep)
-        log.write("   Time taken: " + str(output[1]) + os.linesep)
+        log.write("   Time taken: " + str(output[1]) + os.linesep + os.linesep)
 
         log.write("=========================================" + os.linesep)
 
 if __name__ == '__main__':
-    WORKSPACE = str(sys.argv[1])
-    # b = str(sys.argv[2])
+    global WORKSPACE
+    global SCRIPTS
 
-    scriptFinder()
-    createWorkspaceFolder()
+    try:
+        WORKSPACE = sys.argv[1]
+        SCRIPTS = sys.argv[2]
+    except:
+        WORKSPACE = "/Users/e174285/Documents/GitHub/Jenkins_Test/"
+        SCRIPTS = "/Users/e174285/Desktop/Scripts/"
 
-    pool = multiprocessing.Pool(processes=PROCESSES)
-    pool_outputs = pool.map(worker, range(5))
-    pool.close()
-    pool.join()
+    num_scripts = findScripts()
 
-    createMasterLog(pool_outputs)
+    if num_scripts > 0:
+        createWorkspaceFolder()
+
+        pool = multiprocessing.Pool(processes=PROCESSES)
+        pool_outputs = pool.map(node, range(num_scripts))
+        pool.close()
+        pool.join()
+
+        createReport(pool_outputs)
+    else:
+        print("No scripts found in repo")
+
