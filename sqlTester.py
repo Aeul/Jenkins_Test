@@ -7,8 +7,6 @@ import sys
 import shutil
 
 DRIVER = 'Driver={ODBC Driver 13 for SQL Server};Server=tcp:aeul-test-server.database.windows.net,1433;Database=Aaron_Test_Server;Uid=aeul@aeul-test-server;Pwd={/Raindrop18};Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;'
-WORKSPACE = "" #'/Users/Aaron/Desktop/Scripts'
-workFolder = "/Users/Aaron/Desktop/Scripts/####_##_##"
 
 PROCESSES = 5
 
@@ -16,31 +14,36 @@ Scripts = []
 
 def logErr(message):
         curTime = datetime.datetime.now().strftime('%H:%M:%S')
-        errorLogLocation = workFolder + "/" + ("errorlog.txt")
+        errorLogLocation = build_folder + "/" + ("errorlog.txt")
+        print(message)
         errLog = open(errorLogLocation, 'a')
         errLog.write("[" + curTime + "]" + message + os.linesep)
         errLog.close()
 
 def log(message):
-        LogLocation = workFolder + "/" + ("log.txt")
+        curTime = datetime.datetime.now().strftime('%H:%M:%S')
+        LogLocation = build_folder + "/" + ("log.txt")
+        print(message)
         errLog = open(LogLocation, 'a')
         errLog.write("[" + curTime + "]" + message + os.linesep)
         errLog.close()
 
 def findScripts():
+    print(WORKSPACE)
     numScripts = 0
     exclude = ()
-    for root, dirs, files in os.walk(WORKSPACE):
+    for root, dirs, files in os.walk(SCRIPTS):
         # If there is a no Script Folder
         # - Created new folder (Scripts)
-        scriptsFd = WORKSPACE + "/scripts"
-        if not os.path.exists(scrFd):
+        scriptsFd = WORKSPACE + "scripts"
+        if not os.path.exists(scriptsFd):
             os.mkdir(scriptsFd)
         else:
             shutil.rmtree(scriptsFd) #If it does, delete current and remake
             os.mkdir(scriptsFd)
 
         for name in files:
+            print("Found: " + name)
             subject = root + "/" + name
             #Filter out:
             # - Hidden Files
@@ -58,7 +61,7 @@ def findScripts():
                 # Copy found .Sql file into Script folder
                 newfile = scriptsFd + "/" + name
                 shutil.copy(subject, newfile)
-                print("Moved ==> " + name)
+                print("Copied ==> " + name + "Path = " + scriptsFd)
 
                 numScripts += 1
 
@@ -66,23 +69,23 @@ def findScripts():
                 global Scripts
                 Scripts.append((name, newfile))
 
-            return numScripts
+        return numScripts
 
 
 def node(num):
     startTime = time.time()
-    log("Node " + num + ": is starting...")
+    log("Node " + str(num) + ": is starting...")
     # time.sleep(randint(1,4))
 
     con = pyodbc.connect(DRIVER)
-    log("Node " + num + ": connected to Sql Server")
+    log("Node " + str(num) + ": connected to Sql Server")
     cur = con.cursor()
 
     # Open and read the file as a single buffer
     fd = open(Scripts[num][1], 'r')
     sqlFile = fd.read()
     fd.close()
-    log("Node " + num + ": read Sql Script :" + Scripts[num][0])
+    log("Node " + str(num) + ": read Sql Script :" + Scripts[num][0])
 
     # all SQL commands (split on ';')
     sqlCommands = sqlFile.split(';')
@@ -91,33 +94,38 @@ def node(num):
     line = 1
     for command in sqlCommands:
         try:
-            log("Node " + num + ": executing :" + command)
+            log("Node " + str(num) + ": executing :" + command)
             cur.execute(command) #Run Sql Command
         except (pyodbc.ProgrammingError) as err:
             pass
-            log("Node : " + num + ": Command = " + command + "failed")
-            log("Node : " + num + "Sql Error Msg: " + str(err))
+            log("Node " + str(num) + ": Command = " + command + "failed")
+            log("Node " + str(num) + ": Sql Error Msg: " + str(err))
 
-            errlog("Node : " + num + ": Command = " + command + "failed")
-            errlog("Node : " + num + "Sql Error Msg: " + str(err))
+            logErr("Node " + str(num) + ": Command = " + command + "failed")
+            logErr("Node " + str(num) + ": Sql Error Msg: " + str(err))
             return Scripts[num][0], 0.00, "Failed"
 
     endTime = time.time()
-    log("Node " + num + "completed ")
+    log("Node " + str(num) + " completed ")
     return Scripts[num][0], (endTime - startTime), "Successful"
 
 #Builds folder which will contain logs
 def createWorkspaceFolder():
-    time = datetime.datetime.now().strftime('%Y_%M_%D__%H_%M_%S')
-    new_dir = WORKSPACE + "/" + time
+    builds_folder = WORKSPACE + "/Builds"
+    if not os.path.exists(builds_folder):
+        os.mkdir(builds_folder)
+
+
+    time = datetime.datetime.now().strftime('%y_%m_%d_%S')
+    new_dir = builds_folder + "/" + time
     os.mkdir(new_dir)
 
-    global workFolder
-    workFolder = new_dir
-    print("Work Location : ", workFolder)
+    global build_folder
+    build_folder = new_dir
+    print("Work Location : ", build_folder)
 
 def createReport(pool_outputs):
-    fileLoc = workFolder + "/" + ("MasterLog.txt")
+    fileLoc = build_folder + "/" + ("MasterLog.txt")
     log = open(fileLoc, 'a')
     for output in pool_outputs:
         log.write("=========================================" + os.linesep + os.linesep)
@@ -128,14 +136,27 @@ def createReport(pool_outputs):
         log.write("=========================================" + os.linesep)
 
 if __name__ == '__main__':
-    WORKSPACE = str(sys.argv[1])
+    global WORKSPACE
+    global SCRIPTS
 
-    numScripts = findScripts()
-    createWorkspaceFolder()
+    try:
+        WORKSPACE = sys.argv[1]
+        SCRIPTS = sys.argv[2]
+    except:
+        WORKSPACE = "/Users/e174285/Documents/GitHub/Jenkins_Test/"
+        SCRIPTS = "/Users/e174285/Desktop/Scripts/"
 
-    pool = multiprocessing.Pool(processes=PROCESSES)
-    pool_outputs = pool.map(node, range(numScripts))
-    pool.close()
-    pool.join()
+    num_scripts = findScripts()
 
-    createReport(pool_outputs)
+    if num_scripts > 0:
+        createWorkspaceFolder()
+
+        pool = multiprocessing.Pool(processes=PROCESSES)
+        pool_outputs = pool.map(node, range(num_scripts))
+        pool.close()
+        pool.join()
+
+        createReport(pool_outputs)
+    else:
+        print("No scripts found in repo")
+
