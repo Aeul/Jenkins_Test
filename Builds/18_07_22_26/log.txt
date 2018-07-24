@@ -1,0 +1,58 @@
+[23:54:26]Node 1: is starting...
+[23:54:26]Node 0: is starting...
+[23:54:26]Node 2: is starting...
+[23:54:26]Node 3: is starting...
+[23:54:26]Node 4: is starting...
+[23:54:27]Node 3: connected to Sql Server
+[23:54:27]Node 3: read Sql Script :Sql_Script_Three.sql
+[23:54:27]Node 3: executing :SELECT TOP 100 * FROM dbo.Race_Data_3\5
+[23:54:27]Node 0: connected to Sql Server
+[23:54:27]Node 0: read Sql Script :Sql_Script_Five.sql
+[23:54:27]Node 0: executing :SELECT TOP 100 * FROM dbo.Race_Data_35
+[23:54:27]Node 2: connected to Sql Server
+[23:54:27]Node 2: read Sql Script :Sql_Script_One.sql
+[23:54:27]Node 1: connected to Sql Server
+[23:54:27]Node 4: connected to Sql Server
+[23:54:27]Node 2: executing :SELECT TOP 100 * FROM dbo.Race_Data_35
+[23:54:27]Node 1: read Sql Script :Sql_Script_Four.sql
+[23:54:27]Node 4: read Sql Script :Sql_Script_Two.sql
+[23:54:27]Node 1: executing :SELECT TOP 100 * FROM dbo.Race_Data_35
+[23:54:27]Node 4: executing :SELECT TOP 100 * FROM dbo.Race_Data_35
+[23:54:27]Node 3: Command = SELECT TOP 100 * FROM dbo.Race_Data_3\5failed
+[23:54:27]Node 3: Sql Error Msg: ('42000', "[42000] [Microsoft][ODBC Driver 13 for SQL Server][SQL Server]Incorrect syntax near '\\5'. (102) (SQLExecDirectW)")
+[23:54:27]Node 0: executing :
+--SELECT time, Id FROM dbo.Race_Data_35
+[23:54:27]Node 2: executing :
+--SELECT time, Id FROM dbo.Race_Data_35
+[23:54:27]Node 4: executing :
+--SELECT time, Id FROM dbo.Race_Data_35
+[23:54:27]Node 1: executing :
+--SELECT time, Id FROM dbo.Race_Data_35
+[23:54:27]Node 0: executing :
+--WHERE event = 'M20'
+
+--AND ID LIKE 'AQ%'
+
+
+[23:54:27]Node 2: executing :
+--WHERE event = 'M20'
+
+--AND ID LIKE 'AQ%'
+
+
+[23:54:27]Node 4: executing :
+--WHERE event = 'M20'
+
+--AND ID LIKE 'AQ%'
+
+
+[23:54:27]Node 1: executing :
+--WHERE event = 'M20'
+
+--AND ID LIKE 'AQ%'
+
+
+[23:54:27]Node 0 completed 
+[23:54:27]Node 4 completed 
+[23:54:27]Node 1 completed 
+[23:54:27]Node 2 completed 
