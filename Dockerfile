@@ -1,9 +1,7 @@
-FROM ubuntu:14.04
+FROM alpine
 
 CMD ["echo", "Aaron's Docker Image"]
 
-RUN apt-get update
-RUN apt-get -y upgrade
-RUN apt-get install -y git
+RUN apk add git
 
 CMD ["echo", "Installed Git"]
