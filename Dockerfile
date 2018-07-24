@@ -1,4 +1,4 @@
-From alpine
+FROM ubuntu:14.04
 
 CMD ["echo", "Aaron's Docker Image"]
 
