@@ -1,4 +1,5 @@
 FROM openjdk:8-jdk
+USER root
 
 ARG user=jenkins
 ARG group=jenkins
@@ -29,7 +30,6 @@ COPY jenkins-slave /usr/local/bin/jenkins-slave
 
 ENTRYPOINT ["jenkins-slave"]
 
-USER root
 # apt-get and system utilities
 RUN apt-get update && apt-get install -y \
     curl apt-utils apt-transport-https debconf-utils gcc build-essential g++-5\
