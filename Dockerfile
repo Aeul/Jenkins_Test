@@ -1,10 +1,8 @@
-FROM jenkins/slave:3.19-1
-# MAINTAINER Oleg Nenashev <o.v.nenashev@gmail.com>
-LABEL Description="This is a base image, which allows connecting Jenkins agents via JNLP protocols" Vendor="Jenkins project" Version="3.19"
+# mssql-python-pyodbc
+# Python runtime with pyodbc to connect to SQL Server
+FROM ubuntu:16.04
 USER root
-# <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <>
 
-CMD ["echo", "Installing microsoft drivers"]
 # apt-get and system utilities
 RUN apt-get update && apt-get install -y \
     curl apt-utils apt-transport-https debconf-utils gcc build-essential g++-5\
@@ -22,9 +20,6 @@ RUN apt-get update && ACCEPT_EULA=Y apt-get install -y mssql-tools
 RUN echo 'export PATH="$PATH:/opt/mssql-tools/bin"' >> ~/.bashrc
 RUN /bin/bash -c "source ~/.bashrc"
 
-# <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <>
-
-CMD ["echo", "Installing Python, Pip, and Pyodbc"]
 # python libraries
 RUN apt-get update && apt-get install -y \
     python-pip python-dev python-setuptools \
@@ -40,8 +35,12 @@ RUN pip install --upgrade pip
 # install SQL Server Python SQL Server connector module - pyodbc
 RUN pip install pyodbc
 
-# <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <>
+# install additional utilities
+RUN apt-get update && apt-get install gettext nano vim -y
 
-COPY jenkins-slave /usr/local/bin/jenkins-slave
+# add sample code
+RUN mkdir /sample
+ADD . /sample
+WORKDIR /sample
 
-ENTRYPOINT ["jenkins-slave"]
+CMD /bin/bash ./entrypoint.sh
