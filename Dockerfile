@@ -3,7 +3,10 @@
 FROM ubuntu:16.04
 USER root
 
-RUN apt-get update && apt-get install -y git
+RUN apt-get update
+RUN sudo apt-get install -y git
+
+# <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <>
 
 # apt-get and system utilities
 RUN apt-get update && apt-get install -y \
@@ -22,6 +25,8 @@ RUN apt-get update && ACCEPT_EULA=Y apt-get install -y mssql-tools
 RUN echo 'export PATH="$PATH:/opt/mssql-tools/bin"' >> ~/.bashrc
 RUN /bin/bash -c "source ~/.bashrc"
 
+# <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <>
+
 # python libraries
 RUN apt-get update && apt-get install -y \
     python-pip python-dev python-setuptools \
@@ -36,6 +41,8 @@ RUN pip install --upgrade pip
 
 # install SQL Server Python SQL Server connector module - pyodbc
 RUN pip install pyodbc
+
+# <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <>
 
 # install additional utilities
 RUN apt-get update && apt-get install gettext nano vim -y
