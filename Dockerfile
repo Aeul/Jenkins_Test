@@ -1,13 +1,26 @@
-# mssql-python-pyodbc
-# Python runtime with pyodbc to connect to SQL Server
+# Aaron Eul
+# Docker Image for CICD
+# OS: ubuntu v16.04
+# Packages:
+#   1. Python 3, Pip, and Pyodbc
+#   2. Sql ODBC Driver 17 Note: Driver 13,11 fail to work with Pyodbc
+#   3. Git Note: Must add Path to jenkins /usr/bin/git
+#   4. Java JDK for connecting to Jenkins Note: Need to change for ssh
+
 FROM ubuntu:16.04
+# Using user root because microsoft sql driver failes to install do to permissions. Will have to add docker to a sudo group
 USER root
+
+#Install Git
+# <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <>
+CMD ["echo", "Installing Git"]
 
 RUN apt-get update
 RUN apt-get install -y git
 
+#Installing microsoft's Sql driver and tools
 # <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <>
-
+CMD ["echo", "Installing microsoft sql(17) and tools"]
 # apt-get and system utilities
 RUN apt-get update && apt-get install -y \
     curl apt-utils apt-transport-https debconf-utils gcc build-essential g++-5\
@@ -26,8 +39,9 @@ RUN echo 'export PATH="$PATH:/opt/mssql-tools/bin"' >> ~/.bashrc
 RUN /bin/bash -c "source ~/.bashrc"
 RUN apt-get install unixodbc-dev
 
+#Installing Python3, Pip, and Pyodbc library
 # <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <>
-
+CMD ["echo", "Installing Python3, Pip, and Pyodbc library"]
 # python libraries
 RUN apt-get update && apt-get install -y \
     python-pip python-dev python-setuptools \
@@ -45,18 +59,19 @@ RUN pip install pyodbc
 
 # <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <>
 
-# install additional utilities
+# Installing Nano which isn't need I think for Jenkins Built as it is
+# editing tool
 RUN apt-get update && apt-get install gettext nano vim -y
 
-# add sample code
+# Code for Testing
 RUN mkdir /sample
 ADD . /sample
 WORKDIR /sample
 
 CMD /bin/bash ./entrypoint.sh
 
+#Installing Java JDK
 # <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <>
-
 CMD ["echo", "Installing Java"]
 RUN apt-get update && \
     apt-get upgrade -y && \
@@ -67,6 +82,7 @@ RUN apt-get update && \
     apt-get install -y oracle-java8-installer && \
     apt-get clean
 
+# Code from Jenkins Slave Image that allows one to connect to Jenkins
 # <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <>
 
 ARG user=jenkins
@@ -94,10 +110,12 @@ VOLUME /home/${user}/.jenkins
 VOLUME ${AGENT_WORKDIR}
 WORKDIR /home/${user}
 
+# Runs jenkins-slave whichs makes the connect to Jenkins
 # <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <>
-
 COPY jenkins-slave /usr/local/bin/jenkins-slave
 
 ENTRYPOINT ["jenkins-slave"]
 
-CMD ["echo", "Done!"]
+# <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <>
+
+CMD ["echo", "Image Built"]
