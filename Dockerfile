@@ -4,7 +4,7 @@ FROM ubuntu:16.04
 USER root
 
 RUN apt-get update
-RUN sudo apt-get install -y git
+RUN apt-get install -y git
 
 # <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <> <>
 
