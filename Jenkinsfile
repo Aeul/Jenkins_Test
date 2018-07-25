@@ -1,8 +1,8 @@
 pipeline {
+  def workspace = env.WORKSPACE
   agent {
     node {
       label 'agent'
-      def workspace = env.WORKSPACE
     }
 
   }
