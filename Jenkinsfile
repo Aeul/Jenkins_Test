@@ -14,8 +14,8 @@ pipeline {
     }
     stage('Build') {
       steps {
-        sh '''cd ${workspace}
-python3 sqlTester.sql ${workspace} ${workspace}'''
+        sh '''cd ${WORKSPACE}
+python3 sqlTester.sql ${WORKSPACE} ${WORKSPACE}'''
       }
     }
   }
