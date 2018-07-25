@@ -1,15 +1,15 @@
 pipeline {
   agent {
     node {
-      workspace = pwd()
+      customWorkspace "ws\\${JOB_NAME.replace("%2F", "_")}"
       label 'agent'
     }
   }
   stages {
     stage('Build') {
       steps {
-        sh '''cd ${workspace}
-python3 sqlTester.sql ${workspace} ${workspace}'''
+        sh '''cd ${customWorkspace}
+python3 sqlTester.sql ${customWorkspace} ${customWorkspace}'''
       }
     }
   }
