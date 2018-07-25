@@ -1,7 +1,7 @@
 pipeline {
   agent {
     node {
-      def workspace = env.WORKSPACE
+      workspace = pwd()
       label 'agent'
     }
   }
