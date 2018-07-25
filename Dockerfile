@@ -44,7 +44,7 @@ RUN apt-get install unixodbc-dev
 CMD ["echo", "Installing Python3, Pip, and Pyodbc library"]
 # python libraries
 RUN apt-get update && apt-get install -y \
-    python-pip python-dev python-setuptools \
+    python3-pip python3-dev python3-setuptools \
     --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
