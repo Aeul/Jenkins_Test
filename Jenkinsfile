@@ -1,5 +1,5 @@
 pipeline {
-  agent {
+  agent ('agent'){
     dockerfile true
   }
   stages {
