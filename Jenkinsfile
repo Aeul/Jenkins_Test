@@ -2,6 +2,7 @@ pipeline {
   agent {
     node {
       label 'agent'
+      def workspace = env.WORKSPACE
     }
 
   }
@@ -14,8 +15,8 @@ pipeline {
     }
     stage('Build') {
       steps {
-        sh '''cd ${WORKSPACE}
-python3 sqlTester.sql ${WORKSPACE} ${WORKSPACE}'''
+        sh '''cd ${workspace}
+python3 sqlTester.sql ${workspace} ${workspace}'''
       }
     }
   }
