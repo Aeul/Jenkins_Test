@@ -9,6 +9,7 @@ pipeline {
     stage('Initialize') {
       steps {
         echo 'This is a pipeline for testing sql scripts'
+        git(url: 'https://github.com/Aeul/Jenkins_Test.git', branch: 'master')
       }
     }
     stage('Build') {
